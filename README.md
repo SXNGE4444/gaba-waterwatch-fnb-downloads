@@ -18,3 +18,9 @@ Source development is maintained separately in the Last Dices GABA repository. F
 After GitHub Pages activation: https://sxnge4444.github.io/gaba-waterwatch-fnb-downloads/gabafnbhackaton/
 
 The GitHub Pages site is **read-only static demonstration mode**. Reports may queue on-device, but this standalone preview does NOT upload reports to a municipal or GABA backend. For the authenticated end-to-end workflow use the local application on the private GABA source repository.
+
+## Verified simulator screenshots
+- [Android emulator home screen](https://sxnge4444.github.io/gaba-waterwatch-fnb-downloads/screenshots/android-waterwatch-v0.6.png)
+- [iOS simulator home screen](https://sxnge4444.github.io/gaba-waterwatch-fnb-downloads/screenshots/ios-waterwatch-v0.6.png)
+
+The screenshots demonstrate that Android and iOS simulator packages launch; they do not establish field readiness, official verification or production service availability.
