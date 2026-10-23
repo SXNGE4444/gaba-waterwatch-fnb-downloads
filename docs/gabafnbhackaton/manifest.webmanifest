@@ -5,8 +5,8 @@
   "start_url": "./?view=community",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#06191f",
-  "theme_color": "#06191f",
+  "background_color": "#f7f5ee",
+  "theme_color": "#103726",
   "icons": [
     {
       "src": "assets/icon-192.png",
