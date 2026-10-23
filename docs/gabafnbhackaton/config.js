@@ -1,3 +1,3 @@
-// GABA WaterWatch FNB — isolated Limise/Blanco Supabase demonstration backend.
-// This URL is public; NEVER put secret keys or staff credentials here.
-window.GABA_API_BASE = 'https://cdjtcvuwlwebckrfczbe.supabase.co/functions/v1/waterwatch-api';
+// GABA WaterWatch FNB — Limise Watch Supabase demonstration backend.
+// Public endpoint only. NEVER place service_role keys or staff tokens here.
+window.GABA_API_BASE = 'https://uskemdfbmuilvirqudml.supabase.co/functions/v1/waterwatch-api';
