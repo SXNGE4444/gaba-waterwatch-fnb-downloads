@@ -6,7 +6,7 @@ const $=q=>document.querySelector(q), $$=q=>Array.from(document.querySelectorAll
 const qs=new URLSearchParams(location.search);
 const native=/^(capacitor|ionic):/.test(location.protocol);
 const SUBPATH=location.pathname.startsWith('/gabafnbhackaton')?'/gabafnbhackaton':'';
-const API=(window.GABA_API_BASE||SUBPATH||'')+'/api';
+const API=(window.GABA_API_BASE||SUBPATH||'')+'/api'; const REMOTE=Boolean(window.GABA_API_BASE); let opsToken=REMOTE?(sessionStorage.getItem('gaba.operator.access')||''):'';
 const demoSeed={incidents:[{id:'INC-1042',zone:'Khayelitsha East',asset:'DMA-07 / Spine pipeline',type:'Probable underground leak',severity:'Critical',status:'Investigating',source:'Sensor correlation',time:'09:41',litres:2340000,confidence:94,evidence:['Night flow increased to 49.8 L/s','Downstream pressure fell to 308 kPa','Reservoir drawdown accelerated'],audit:['09:41 · Simulated anomaly detected','09:43 · Evidence brief generated']},{id:'INC-1041',zone:'Mitchells Plain',asset:'Reservoir / R-02',type:'Low reservoir level',severity:'High',status:'Open',source:'Reservoir telemetry',time:'08:25',litres:0,confidence:88,evidence:['Reservoir level 38%','24-hour average 61%','No flow confirmation available'],audit:['08:25 · Reservoir warning raised']},{id:'INC-1040',zone:'Bellville South',asset:'Pump station / PS-03',type:'Pump vibration anomaly',severity:'Medium',status:'Monitoring',source:'Sensor simulator',time:'07:58',litres:0,confidence:81,evidence:['Vibration index outside normal band','Run-time above simulated threshold'],audit:['07:58 · Simulated alert opened']}],reports:[{id:'REP-3021',category:'No water',zone:'Khayelitsha East',details:'No running water since early morning near the library.',createdAt:'2026-10-22T08:07:00+02:00',status:'Received',source:'Seeded demonstration',clientId:'seed-3021'}],audit:[{id:'AUD-1',action:'Simulation seeded',detail:'All data is fictional and must not be used for operations',time:'2026-10-22T08:00:00+02:00'}],revision:1};
 let opsAuth=false,opsCsrf='';
 // Never retain operator-only responses in browser storage. Remove pre-v0.5 cached overviews.
@@ -18,7 +18,7 @@ function localReports(){try{return JSON.parse(localStorage.getItem('gaba.localRe
 function storeLocal(r){const all=localReports();if(!all.some(x=>x.clientId===r.clientId)){all.unshift(r);localStorage.setItem('gaba.localReports',JSON.stringify(all.slice(0,100)))}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),4000)}
 function statusUI(){const online=navigator.onLine&&!forceOffline;const el=$('#online-pill');el.textContent=apiConnected&&online?'LOCAL API CONNECTED':online?'OFFLINE DEMO DATA':'OFFLINE';el.classList.toggle('offline',!online||!apiConnected);const m=$('#mobile-sync');m.classList.toggle('offline',!online||!apiConnected);const n=queued().length;$('#sync-label').textContent=n?`${n} report${n>1?'s':''} queued · ${online?'Sync available':'Saved offline'}`:(apiConnected&&online?'Connected · reports can sync':'Offline-ready · reports save on device');}
-async function request(path,opts={}){if(forceOffline)throw Error('Simulated offline');const c=new AbortController();const timeout=setTimeout(()=>c.abort(),4000);try{const r=await fetch(API+path,{...opts,signal:c.signal,credentials:'same-origin',headers:{'Content-Type':'application/json',...(opsAuth && /^(PATCH|POST|PUT|DELETE)$/.test(opts.method||'') && path!=='/reports' && path!=='/auth/login'?{'X-GABA-CSRF':opsCsrf}:{}),...(opts.headers||{})},cache:'no-store'});const v=await r.json();if(!r.ok)throw Error(v.error||`API ${r.status}`);return v}finally{clearTimeout(timeout)}}
+async function request(path,opts={}){if(forceOffline)throw Error('Simulated offline');const c=new AbortController();const timeout=setTimeout(()=>c.abort(),4000);try{const r=await fetch(API+path,{...opts,signal:c.signal,credentials:'same-origin',headers:{'Content-Type':'application/json',...(REMOTE&&opsToken?{'Authorization':'Bearer '+opsToken}:{}),...(!REMOTE&&opsAuth && /^(PATCH|POST|PUT|DELETE)$/.test(opts.method||'') && path!=='/reports' && path!=='/auth/login'?{'X-GABA-CSRF':opsCsrf}:{}),...(opts.headers||{})},cache:'no-store'});const v=await r.json();if(!r.ok)throw Error(v.error||`API ${r.status}`);return v}finally{clearTimeout(timeout)}}
 function updateOperatorGate(){
   const locked=!opsAuth;
   $('#app').classList.toggle('ops-locked',locked);
@@ -26,7 +26,7 @@ function updateOperatorGate(){
   const out=$('#operator-logout');if(out)out.hidden=locked;
 }
 async function checkOperatorSession(){
-  try{const r=await request('/auth/session');opsAuth=!!r.authenticated;opsCsrf=r.csrfToken||''}
+  try{const r=await request('/auth/session');opsAuth=!!r.authenticated;opsCsrf=r.csrfToken||'';if(REMOTE&&!opsAuth){opsToken='';sessionStorage.removeItem('gaba.operator.access')}}
   catch{opsAuth=false;opsCsrf=''}
   updateOperatorGate();return opsAuth;
 }
@@ -87,13 +87,13 @@ document.addEventListener('click',async e=>{const btn=e.target.closest('button')
 $('#report-form').addEventListener('submit',submitReport);
 $('#operator-login-form').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget;const box=$('#operator-login-error');box.textContent='Checking credentials…';
-  try{const res=await request('/auth/login',{method:'POST',body:JSON.stringify({password:$('#operator-password').value})});
-    opsAuth=res.authenticated;opsCsrf=res.csrfToken;form.reset();box.textContent='';updateOperatorGate();await refresh();toast('Operator session active. Synthetic demo only.');
+  try{const res=await request('/auth/login',{method:'POST',body:JSON.stringify({email:$('#operator-email')?.value||'',password:$('#operator-password').value})});
+    opsAuth=res.authenticated;opsCsrf=res.csrfToken||'';if(REMOTE&&res.accessToken){opsToken=res.accessToken;sessionStorage.setItem('gaba.operator.access',opsToken)}form.reset();box.textContent='';updateOperatorGate();await refresh();toast('Operator session active. Synthetic demo only.');
   }catch(err){box.textContent=err.message;opsAuth=false;opsCsrf='';updateOperatorGate()}
 });
 $('#operator-logout').addEventListener('click',async()=>{
   try{await request('/auth/logout',{method:'POST',body:'{}'})}catch{}
-  opsAuth=false;opsCsrf='';apiConnected=false;data=structuredClone(demoSeed);updateOperatorGate();render();toast('Operator session closed.');
+  opsAuth=false;opsCsrf='';opsToken='';sessionStorage.removeItem('gaba.operator.access');apiConnected=false;data=structuredClone(demoSeed);updateOperatorGate();render();toast('Operator session closed.');
 });
 $('#open-community').onclick=()=>switchMode('community');
 $('#float-switch').onclick=()=>switchMode('community');

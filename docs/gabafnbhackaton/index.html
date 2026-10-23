@@ -42,7 +42,7 @@
    <span class="ops-login-icon" aria-hidden="true">◈</span>
    <h2 id="ops-login-heading">Secure operator workspace.</h2>
    <p>The water network dashboard contains operational workflows. Sign in with the <strong>competition demonstration operator password</strong>. Residents can use WaterWatch without signing in.</p>
-   <form id="operator-login-form"><label for="operator-password">Operator password</label><input type="password" id="operator-password" name="password" minlength="12" autocomplete="current-password" required placeholder="Password from your local server terminal"/><button class="ops-login-button" type="submit">Unlock command centre <span>↗</span></button></form>
+   <form id="operator-login-form"><label for="operator-email">Supabase operator email (cloud mode)</label><input id="operator-email" name="email" type="email" autocomplete="username" placeholder="authorised-user@example.com"/><label for="operator-password">Operator password</label><input type="password" id="operator-password" name="password" minlength="12" autocomplete="current-password" required placeholder="Password from your local server terminal"/><button class="ops-login-button" type="submit">Unlock command centre <span>↗</span></button></form>
    <p id="operator-login-error" role="alert" aria-live="polite" class="ops-login-error"></p>
    <button class="ops-resident-button" type="button" data-switch="community">← Return to resident app</button>
    <small>Security: HTTP-only sessions · CSRF-protected operator actions · synthetic telemetry. Never enter live utility credentials.</small>
