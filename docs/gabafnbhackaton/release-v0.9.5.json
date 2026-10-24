@@ -1,0 +1,15 @@
+{
+  "product": "GABA WaterWatch FNB",
+  "release": "0.9.5",
+  "package": "za.co.lastdices.gabawaterwatch.fnb",
+  "minAndroidSdk": 24,
+  "distribution": "Android APK direct sideload",
+  "signed": true,
+  "signedWith": "APK v2 debug certificate (not Play Store)",
+  "sizeBytes": 4342031,
+  "apkSha256": "04bbc0cc21967890c5539b18182cb55b3c60aa957630cbde538cef4d2d30b960",
+  "apk": "GABA-WaterWatch-FNB-v0.9.5-JUDGES.apk",
+  "source": "GABA-WaterWatch-FNB-v0.9.5-PROJECT-SOURCE.zip",
+  "backend": "Supabase synthetic demo; not municipal data",
+  "staffFlow": "Pending authenticated QA"
+}
