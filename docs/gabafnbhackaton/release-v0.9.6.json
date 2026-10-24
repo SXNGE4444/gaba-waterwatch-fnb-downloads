@@ -6,11 +6,13 @@
   "apk": "GABA-WaterWatch-FNB-v0.9.6.apk",
   "apkBytes": 4342723,
   "apkSha256": "a07587c780cfe8182590aff8275e2eb7c50e468e7e56b86149ce749e3a918379",
-  "sourceCommit": "16f6168",
+  "sourceCommit": "03ba497",
   "verifiedLoginMandatory": true,
   "backendOwnerScopeDeployed": true,
   "androidInstallTested": true,
   "websiteGateBrowserTested": true,
-  "signupEmailProviderIssue": "2026-10-24 Resend SMTP 550 unverified domain; end-to-end new account not certified",
-  "physicalPhoneVerified": false
+  "signupEmailProviderIssue": "resolved; successful signup HTTP 200 + email verification HTTP 303 and confirmed account on 2026-10-24 at 11:30 UTC",
+  "physicalPhoneVerified": false,
+  "smtpVerificationEvidence": true,
+  "fullNewUserAndroidAcceptanceTested": false
 }
