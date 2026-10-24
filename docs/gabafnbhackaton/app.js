@@ -17,7 +17,7 @@ function queued(){try{return JSON.parse(localStorage.getItem('gaba.queue')||'[]'
 function localReports(){try{return JSON.parse(localStorage.getItem('gaba.localReports')||'[]')}catch{return []}}
 function storeLocal(r){const all=localReports();if(!all.some(x=>x.clientId===r.clientId)){all.unshift(r);localStorage.setItem('gaba.localReports',JSON.stringify(all.slice(0,100)))}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),4000)}
-function statusUI(){const online=navigator.onLine&&!forceOffline;const el=$('#online-pill');el.textContent=apiConnected&&online?'LOCAL API CONNECTED':online?'OFFLINE DEMO DATA':'OFFLINE';el.classList.toggle('offline',!online||!apiConnected);const m=$('#mobile-sync');m.classList.toggle('offline',!online||!apiConnected);const n=queued().length;$('#sync-label').textContent=n?`${n} report${n>1?'s':''} queued · ${online?'Sync available':'Saved offline'}`:(apiConnected&&online?'Connected · reports can sync':'Offline-ready · reports save on device');}
+function statusUI(){const online=navigator.onLine&&!forceOffline;const el=$('#online-pill');el.textContent=apiConnected&&online?(REMOTE?'CLOUD API CONNECTED':'LOCAL API CONNECTED'):online?'OFFLINE DEMO DATA':'OFFLINE';el.classList.toggle('offline',!online||!apiConnected);const m=$('#mobile-sync');m.classList.toggle('offline',!online||!apiConnected);const n=queued().length;$('#sync-label').textContent=n?`${n} report${n>1?'s':''} queued · ${online?'Sync available':'Saved offline'}`:(apiConnected&&online?'Connected · reports can sync':'Offline-ready · reports save on device');}
 async function request(path,opts={}){if(forceOffline)throw Error('Simulated offline');const c=new AbortController();const timeout=setTimeout(()=>c.abort(),4000);try{const r=await fetch(API+path,{...opts,signal:c.signal,credentials:'same-origin',headers:{'Content-Type':'application/json',...(REMOTE&&opsToken?{'Authorization':'Bearer '+opsToken}:{}),...(!REMOTE&&opsAuth && /^(PATCH|POST|PUT|DELETE)$/.test(opts.method||'') && path!=='/reports' && path!=='/auth/login'?{'X-GABA-CSRF':opsCsrf}:{}),...(opts.headers||{})},cache:'no-store'});const v=await r.json();if(!r.ok)throw Error(v.error||`API ${r.status}`);return v}finally{clearTimeout(timeout)}}
 function updateOperatorGate(){
   const locked=!opsAuth;
@@ -38,11 +38,21 @@ async function refresh(){
     }
     if($('#app').classList.contains('mode-community')){
       publicFeed=await request('/public/feed?area='+encodeURIComponent(selectedArea));
-      const saved=localReports();
-      for(const r of saved){if(!/^local-[0-9a-fA-F-]{36}$/.test(r.clientId)||r.status==='Queued on device')continue;
-        try{const check=await request('/public/report-status?clientId='+encodeURIComponent(r.clientId));Object.assign(r,{id:check.id,status:check.status,operatorNote:check.operatorNote,routingStage:check.routingStage,review:check.review})}catch{}
+      // Network refresh and offline-queue sync can overlap. Only merge fresh server
+      // results into the *latest* local state; never restore a stale queued snapshot.
+      const queuedIds=new Set(queued().map(r=>r.clientId));
+      const changes=new Map();
+      for(const r of localReports()){
+        if(!/^local-[0-9a-fA-F-]{36}$/.test(r.clientId)||queuedIds.has(r.clientId))continue;
+        try{
+          const check=await request('/public/report-status?clientId='+encodeURIComponent(r.clientId));
+          changes.set(r.clientId,{id:check.id,status:check.status,operatorNote:check.operatorNote,routingStage:check.routingStage,review:check.review});
+        }catch{}
       }
-      localStorage.setItem('gaba.localReports',JSON.stringify(saved));
+      if(changes.size){
+        const latest=localReports().map(r=>changes.has(r.clientId)?{...r,...changes.get(r.clientId)}:r);
+        localStorage.setItem('gaba.localReports',JSON.stringify(latest));
+      }
       apiConnected=true;
     }else{
       const v=await request('/overview');data=v;apiConnected=true;
