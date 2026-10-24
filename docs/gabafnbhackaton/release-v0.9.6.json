@@ -1,0 +1,16 @@
+{
+  "product": "GABA WaterWatch FNB",
+  "version": "0.9.6",
+  "androidPackage": "za.co.lastdices.gabawaterwatch.fnb",
+  "androidMinimumApi": 24,
+  "apk": "GABA-WaterWatch-FNB-v0.9.6.apk",
+  "apkBytes": 4342723,
+  "apkSha256": "a07587c780cfe8182590aff8275e2eb7c50e468e7e56b86149ce749e3a918379",
+  "sourceCommit": "16f6168",
+  "verifiedLoginMandatory": true,
+  "backendOwnerScopeDeployed": true,
+  "androidInstallTested": true,
+  "websiteGateBrowserTested": true,
+  "signupEmailProviderIssue": "2026-10-24 Resend SMTP 550 unverified domain; end-to-end new account not certified",
+  "physicalPhoneVerified": false
+}

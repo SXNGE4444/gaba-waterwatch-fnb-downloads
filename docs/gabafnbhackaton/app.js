@@ -18,7 +18,34 @@ function localReports(){try{return JSON.parse(localStorage.getItem('gaba.localRe
 function storeLocal(r){const all=localReports();if(!all.some(x=>x.clientId===r.clientId)){all.unshift(r);localStorage.setItem('gaba.localReports',JSON.stringify(all.slice(0,100)))}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),4000)}
 function statusUI(){const online=navigator.onLine&&!forceOffline;const el=$('#online-pill');el.textContent=apiConnected&&online?(REMOTE?'CLOUD API CONNECTED':'LOCAL API CONNECTED'):online?'OFFLINE DEMO DATA':'OFFLINE';el.classList.toggle('offline',!online||!apiConnected);const m=$('#mobile-sync');m.classList.toggle('offline',!online||!apiConnected);const n=queued().length;$('#sync-label').textContent=n?`${n} report${n>1?'s':''} queued · ${online?'Sync available':'Saved offline'}`:(apiConnected&&online?'Connected · reports can sync':'Offline-ready · reports save on device');}
-async function request(path,opts={}){if(forceOffline)throw Error('Simulated offline');const c=new AbortController();const timeout=setTimeout(()=>c.abort(),4000);try{const r=await fetch(API+path,{...opts,signal:c.signal,credentials:'same-origin',headers:{'Content-Type':'application/json',...(REMOTE&&opsToken?{'Authorization':'Bearer '+opsToken}:{}),...(!REMOTE&&opsAuth && /^(PATCH|POST|PUT|DELETE)$/.test(opts.method||'') && path!=='/reports' && path!=='/auth/login'?{'X-GABA-CSRF':opsCsrf}:{}),...(opts.headers||{})},cache:'no-store'});const v=await r.json();if(!r.ok)throw Error(v.error||`API ${r.status}`);return v}finally{clearTimeout(timeout)}}
+async function verifiedResidentToken(){
+ const key='gaba.resident.access', rk='gaba.resident.refresh';
+ const auth='https://uskemdfbmuilvirqudml.supabase.co/auth/v1';
+ const pub='sb_publishable_iZEnOA3f0yvz6M5hnTfOvA_sMYS38Oq';
+ const validate=async token=>{
+  if(!token)return null;
+  try{const r=await fetch(auth+'/user',{headers:{apikey:pub,Authorization:'Bearer '+token},cache:'no-store'});
+   if(!r.ok)return null;const u=await r.json();return u.email_confirmed_at?token:null;
+  }catch{return null}
+ };
+ let token=await validate(localStorage.getItem(key));
+ if(token)return token;
+ const refresh=localStorage.getItem(rk);
+ if(refresh)try{
+  const r=await fetch(auth+'/token?grant_type=refresh_token',{method:'POST',headers:{apikey:pub,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:refresh})});
+  if(r.ok){const d=await r.json();localStorage.setItem(key,d.access_token);localStorage.setItem(rk,d.refresh_token);token=await validate(d.access_token);if(token)return token;}
+ }catch{}
+ localStorage.removeItem(key);localStorage.removeItem(rk);
+ if(!native)location.replace('auth.html?tab=login&next=community');
+ return null;
+}
+async function request(path,opts={}){
+ if(/^\/(reports$|public\/report-status)/.test(path)){
+   const t=await verifiedResidentToken();
+   if(!t)throw Error('Your WaterWatch login is required. Sign in again to sync reports.');
+   opts={...opts,headers:{...(opts.headers||{}),Authorization:'Bearer '+t}};
+ }
+ if(forceOffline)throw Error('Simulated offline');const c=new AbortController();const timeout=setTimeout(()=>c.abort(),4000);try{const r=await fetch(API+path,{...opts,signal:c.signal,credentials:'same-origin',headers:{'Content-Type':'application/json',...(REMOTE&&opsToken?{'Authorization':'Bearer '+opsToken}:{}),...(!REMOTE&&opsAuth && /^(PATCH|POST|PUT|DELETE)$/.test(opts.method||'') && path!=='/reports' && path!=='/auth/login'?{'X-GABA-CSRF':opsCsrf}:{}),...(opts.headers||{})},cache:'no-store'});const v=await r.json();if(!r.ok)throw Error(v.error||`API ${r.status}`);return v}finally{clearTimeout(timeout)}}
 function updateOperatorGate(){
   const locked=!opsAuth;
   $('#app').classList.toggle('ops-locked',locked);
@@ -60,7 +87,12 @@ async function refresh(){
   }catch(e){if(!$('#app').classList.contains('mode-community')){opsAuth=false;opsCsrf='';updateOperatorGate()}apiConnected=false;data=structuredClone(demoSeed)}
   render();statusUI();
 }
-function switchMode(mode){updateOperatorGate();$('#app').classList.toggle('mode-site',mode==='site');$('#app').classList.toggle('mode-community',mode==='community');$('#app').classList.toggle('mode-operator',mode==='operator');if(mode==='community'){document.title='GABA WaterWatch — Community';showMobile(activeMobile)}else if(mode==='operator'){document.title='GABA Water Intelligence — Operator Command Centre';showPage(activePage)}else{document.title='GABA Water Intelligence | Cleaner Waters. Brighter Tomorrows.'}if(!native){const next=mode==='site'?location.pathname:location.pathname+'?view='+encodeURIComponent(mode);history.replaceState({},'',next)}window.scrollTo({top:0,behavior:'instant'});if(!forceOffline)refresh()}
+function switchMode(mode){
+ if(mode==='community'&&!native){
+   const access=localStorage.getItem('gaba.resident.access');
+   if(!access){location.href='auth.html?next=community';return;}
+ }
+ updateOperatorGate();$('#app').classList.toggle('mode-site',mode==='site');$('#app').classList.toggle('mode-community',mode==='community');$('#app').classList.toggle('mode-operator',mode==='operator');if(mode==='community'){document.title='GABA WaterWatch — Community';showMobile(activeMobile)}else if(mode==='operator'){document.title='GABA Water Intelligence — Operator Command Centre';showPage(activePage)}else{document.title='GABA Water Intelligence | Cleaner Waters. Brighter Tomorrows.'}if(!native){const next=mode==='site'?location.pathname:location.pathname+'?view='+encodeURIComponent(mode);history.replaceState({},'',next)}window.scrollTo({top:0,behavior:'instant'});if(!forceOffline)refresh()}
 function showPage(page){if(!$('#page-'+page))return;activePage=page;$$('.page').forEach(n=>n.classList.toggle('active',n.id==='page-'+page));$$('.nav-btn[data-page]').forEach(n=>n.classList.toggle('active',n.dataset.page===page));$('#current-page-label').textContent=({overview:'COMMAND CENTRE',network:'WATER NETWORK',incidents:'INCIDENTS',workorders:'FIELD OPERATIONS',evidence:'EVIDENCE & AUDIT',communityReports:'COMMUNITY INBOX',judge:'JUDGE WALKTHROUGH'})[page];window.scrollTo({top:0,behavior:'instant'})}
 function showMobile(page){if(!$('#community-'+page))return;if(page==='report'&&!$('#report-zone').value)$('#report-zone').value=selectedArea;activeMobile=page;$('#community-shell').classList.toggle('is-subpage',page!=='home');$$('.community-page').forEach(n=>n.classList.toggle('active',n.id==='community-'+page));$$('[data-mobile-page]').forEach(n=>{if(n.closest('.mobile-nav'))n.classList.toggle('active',n.dataset.mobilePage===page)});$('#community-scroll').scrollTop=0}
 function render(){const open=data.incidents.filter(i=>i.status!=='Resolved').length;$('#kpi-alerts').innerHTML=`${String(open).padStart(2,'0')} <small>active</small>`;$('#side-incident-count').textContent=open;$('#side-report-count').textContent=data.reports.filter(r=>r.status!=='Resolved').length;
