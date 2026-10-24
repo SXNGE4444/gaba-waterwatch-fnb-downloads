@@ -1,0 +1,17 @@
+GABA WATERWATCH - 30-SECOND VOICEOVER
+FNB APP OF THE YEAR HACKATHON 2026
+Company: LAST DICES (PTY) LTD
+
+South Africa loses valuable water while communities struggle to report problems and track responses.
+
+We built GABA WaterWatch, an Android application connecting residents and water operators through one accountable reporting system.
+
+Residents can report burst pipes, water interruptions and other concerns, even when temporarily offline.
+
+Reports synchronise to our cloud backend, receive tracking numbers and support an operator review workflow.
+
+Our demonstration uses synthetic water data, with no live municipal integration.
+
+GABA WaterWatch: Water in sight. Communities in mind.
+
+VIDEO DISCLAIMER: Demonstration footage records a local simulated six-stage workflow. Android APK cloud intake, cloud report status and offline queue were separately tested against Limise Watch Supabase; authenticated operator/reviewer cloud accounts remain pending.
