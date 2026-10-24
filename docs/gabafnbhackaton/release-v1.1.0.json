@@ -1,0 +1,17 @@
+{
+  "release": "1.1.0",
+  "product": "GABA WaterWatch \u2014 Judges Edition",
+  "apk": "GABA-WaterWatch-JUDGES-v1.1.0.apk",
+  "sizeBytes": 4339403,
+  "minAndroidSdk": 24,
+  "package": "za.co.lastdices.gabawaterwatch.judges2026",
+  "native": true,
+  "requiredLoginForPublicReporting": false,
+  "operatorAuthorisationRequired": true,
+  "reportCloudVerified": "REP-058E2A5E",
+  "apkSha256": "2f96b10d58b32b5241adb1fd04311d59d9bae3dad07010b06086a009d581ef6b",
+  "signing": "APK v2, debug signer, sideload only",
+  "syntheticData": true,
+  "emulatorTested": true,
+  "physicalPhoneTested": false
+}
